@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>출입국관리사무소 RPG - 외국인 등록</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Noto Sans KR',sans-serif;background:linear-gradient(-45deg,#667eea,#764ba2,#f093fb,#4facfe);background-size:400% 400%;animation:gs 15s ease infinite;overflow:hidden;}
+@keyframes gs{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+#game{width:100vw;height:100vh;position:relative;display:flex;align-items:center;justify-content:center;}
+#background{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center center;background-color:rgba(0,0,0,.3);filter:brightness(1.1) saturate(1.3);animation:bp 4s ease-in-out infinite;}
+@keyframes bp{0%,100%{filter:brightness(1.1) saturate(1.3)}50%{filter:brightness(1.2) saturate(1.5)}}
+#dialogue{position:absolute;bottom:-15%;left:50%;transform:translateX(-50%);width:80%;max-width:950px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:35px;border-radius:30px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 40px rgba(102,126,234,.8);border:4px solid #fff;animation:sub .6s cubic-bezier(.34,1.56,.64,1);position:relative;}
+#dialogue::before{content:'';position:absolute;inset:0;border-radius:30px;padding:4px;background:linear-gradient(135deg,#667eea,#764ba2,#f093fb,#4facfe);background-size:300% 300%;animation:bg 3s ease infinite;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+@keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes sub{0%{opacity:0;transform:translateX(-50%) translateY(50px) scale(.8)}60%{transform:translateX(-50%) translateY(-10px) scale(1.05)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+#dialogue::after{content:'';position:absolute;bottom:-25px;left:50%;transform:translateX(-50%);border-width:20px;border-style:solid;border-color:#667eea transparent transparent transparent;filter:drop-shadow(0 5px 10px rgba(0,0,0,.4));}
+#text{margin-bottom:25px;font-size:22px;font-weight:600;min-height:80px;white-space:pre-line;cursor:pointer;line-height:1.8;color:#fff;letter-spacing:1px;text-shadow:2px 2px 4px rgba(0,0,0,.3);}
+#choices{display:flex;flex-direction:column;gap:15px;}
+button{padding:18px 25px;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;border:3px solid #fff;cursor:pointer;border-radius:15px;font-size:18px;font-weight:700;font-family:'Noto Sans KR',sans-serif;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 10px 30px rgba(245,87,108,.5),inset 0 -3px 0 rgba(0,0,0,.2);position:relative;overflow:hidden;letter-spacing:1px;}
+button::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);transition:left .5s ease;}
+button:hover{background:linear-gradient(135deg,#4facfe,#00f2fe);transform:translateY(-5px) scale(1.05);box-shadow:0 15px 40px rgba(79,172,254,.6),inset 0 -3px 0 rgba(0,0,0,.2);}
+button:hover::before{left:100%}
+button:active{transform:translateY(-2px) scale(1.02)}
+#hint{font-size:14px;color:rgba(255,255,255,.8);text-align:right;display:none;margin-top:20px;font-style:italic;font-weight:600;animation:bl 1s infinite;}
+@keyframes bl{0%,49%,100%{opacity:1}50%,99%{opacity:.3}}
+#missionComplete{position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at center,rgba(0,0,0,.7),rgba(0,0,0,.95));display:none;justify-content:center;align-items:center;z-index:999;backdrop-filter:blur(8px);}
+.popup-box{background:linear-gradient(135deg,#667eea,#764ba2 50%,#f093fb);color:#fff;padding:60px 80px;border-radius:40px;text-align:center;box-shadow:0 50px 100px rgba(0,0,0,.8),0 0 60px rgba(240,147,251,.8);border:5px solid #fff;animation:pie .7s cubic-bezier(.34,1.56,.64,1);max-width:600px;position:relative;overflow:hidden;}
+.popup-box::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.2),transparent 50%);pointer-events:none;}
+@keyframes pie{0%{opacity:0;transform:scale(.3) rotateZ(-15deg)}50%{transform:scale(1.1) rotateZ(5deg)}100%{opacity:1;transform:scale(1) rotateZ(0)}}
+.popup-box h2{font-size:72px;margin:0 0 30px;color:#fff;text-shadow:4px 4px 8px rgba(0,0,0,.5),0 0 20px rgba(255,255,255,.3);animation:be .8s cubic-bezier(.34,1.56,.64,1);}
+@keyframes be{0%{opacity:0;transform:scale(0) rotateZ(-30deg)}50%{transform:scale(1.2) rotateZ(10deg)}100%{opacity:1;transform:scale(1) rotateZ(0)}}
+.popup-box p{font-size:22px;margin:20px 0;color:#fff;line-height:1.8;}
+.popup-box p:first-of-type{font-size:26px;font-weight:700;}
+.popup-box p:last-of-type{font-size:16px;color:rgba(255,255,255,.9);margin-top:35px;}
+</style>
+</head>
+<body>
+<div id='game'>
+<div id='background'></div>
+<div id='dialogue'><div id='text'></div><div id='choices'></div><div id='hint'>[Enter] 계속</div></div>
+</div>
+<div id='missionComplete'><div class='popup-box'><h2>🎉 외국인 등록 신청 완료!</h2><p>외국인 등록증 발급 신청이 성공적으로 완료되었습니다!</p><p>[Enter]를 눌러 메뉴로 돌아가기</p></div></div>
+<script>
+let step=0,choices={},isTyping=false,waitingForNext=false,missionDone=false;
+function changeBackground(img){document.getElementById('background').style.backgroundImage=`url('${img}')`;}
+function typeText(text,cb){const el=document.getElementById('text');el.innerText='';let i=0;isTyping=true;function t(){if(i<text.length){el.innerText+=text[i++];setTimeout(t,30);}else{isTyping=false;cb&&cb();}}t();el.onclick=()=>{if(isTyping){el.innerText=text;isTyping=false;cb&&cb();}}}
+function clearChoices(){choicesDiv.innerHTML='';hint.style.display='none';}
+const choicesDiv=document.getElementById('choices'),hint=document.getElementById('hint');
+function addChoice(text,val){let b=document.createElement('button');b.innerText=text;b.onclick=()=>!isTyping&&next(val);choicesDiv.appendChild(b);}
+function autoNext(){clearChoices();waitingForNext=true;hint.style.display='block';}
+function next(choice=null){if(isTyping)return;waitingForNext=false;if(choice!==null)choices[step]=choice;step++;render();}
+function createConfetti(){const c=document.createElement('div');c.style.cssText='position:fixed;width:10px;height:10px;border-radius:50%;pointer-events:none;z-index:1000;top:-10px;';c.style.backgroundColor=['#667eea','#764ba2','#f093fb','#f5576c','#4facfe','#00f2fe'][Math.floor(Math.random()*6)];c.style.left=Math.random()*100+'%';const tx=(Math.random()-.5)*200,ty=Math.random()*300+200;c.animate([{transform:'translate(0,0) rotate(0deg)',opacity:1},{transform:`translate(${tx}px,${ty}px) rotate(360deg)`,opacity:0}],{duration:2000+Math.random()*1000,easing:'cubic-bezier(0.25,0.46,0.45,0.94)'});document.body.appendChild(c);setTimeout(()=>c.remove(),3000);}
+function showMissionComplete(){missionDone=true;document.getElementById('missionComplete').style.display='flex';for(let i=0;i<30;i++)setTimeout(()=>createConfetti(),i*30);}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){if(missionDone){localStorage.setItem('cleared_'+localStorage.getItem('current_mission'),'true');window.location.href='menu.html';return;}else if(!isTyping&&waitingForNext)next();}});
+
+function render(){
+  clearChoices();
+
+  // ===== 파트1: 안내 데스크 =====
+  if(step===1){
+    changeBackground('Information_desk.png');
+    typeText('주인공: 출입국관리사무소에 도착했다!\n안내 데스크에 가보자.',autoNext);
+  }
+  else if(step===2){
+    changeBackground('Information_desk.png');
+    typeText('안내원: 안녕하세요! 무엇을 도와드릴까요?',()=>{
+      addChoice('외국인 등록을 하러 왔습니다.','1');
+      addChoice('외국인 등록증 발급이 가능한가요?','2');
+    });
+  }
+  else if(step===3){
+    changeBackground('Information_desk.png');
+    if(choices[2]==='1'){
+      typeText('안내원: 외국인 등록이요! 체류 자격이 어떻게 되세요?',()=>{
+        addChoice('유학생입니다. (D-2 비자)','1');
+        addChoice('취업 비자입니다. (E-시리즈)','2');
+        addChoice('어학연수생입니다. (D-4 비자)','3');
+      });
+    }else{
+      typeText('안내원: 네, 가능합니다! 입국일로부터 90일 이내에 신청하셔야 해요.\n체류 자격이 어떻게 되세요?',()=>{
+        addChoice('유학생입니다. (D-2 비자)','1');
+        addChoice('취업 비자입니다. (E-시리즈)','2');
+        addChoice('어학연수생입니다. (D-4 비자)','3');
+      });
+    }
+  }
+  else if(step===4){
+    changeBackground('Information_desk.png');
+    if(choices[3]==='1'){
+      typeText('안내원: D-2 유학 비자시군요! 필요한 서류를 안내해 드릴게요.\n\n📋 통합신청서 (별지 제34호 서식)\n📕 여권 원본 및 인적사항면 사본\n📷 컬러 사진 1매 (3.5x4.5cm, 흰 배경)\n🏠 체류지 입증 서류\n📄 재학증명서 + 등록금 납입증명서\n💰 수수료 30,000원 (현금만 가능)',()=>{
+        addChoice('네, 다 준비했습니다!','1');
+        addChoice('통합신청서는 어디서 받나요?','2');
+      });
+    }else if(choices[3]==='2'){
+      typeText('안내원: E-시리즈 취업 비자시군요! 필요한 서류를 안내해 드릴게요.\n\n📋 통합신청서 (별지 제34호 서식)\n📕 여권 원본 및 인적사항면 사본\n📷 컬러 사진 1매 (3.5x4.5cm, 흰 배경)\n🏠 체류지 입증 서류\n📄 고용계약서 + 사업자등록증 사본\n💰 수수료 30,000원 (현금만 가능)',()=>{
+        addChoice('네, 다 준비했습니다!','1');
+        addChoice('통합신청서는 어디서 받나요?','2');
+      });
+    }else{
+      typeText('안내원: D-4 어학연수 비자시군요! 필요한 서류를 안내해 드릴게요.\n\n📋 통합신청서 (별지 제34호 서식)\n📕 여권 원본 및 인적사항면 사본\n📷 컬러 사진 1매 (3.5x4.5cm, 흰 배경)\n🏠 체류지 입증 서류\n📄 표준입학허가서 + 등록금 납입증명서\n💰 수수료 30,000원 (현금만 가능)',()=>{
+        addChoice('네, 다 준비했습니다!','1');
+        addChoice('통합신청서는 어디서 받나요?','2');
+      });
+    }
+  }
+  else if(step===5){
+    changeBackground('Information_desk.png');
+    if(choices[4]==='2'){
+      typeText('안내원: 하이코리아(Hikorea) 사이트에서 다운로드할 수 있어요!\n미리 작성해 오셨나요?',()=>{
+        addChoice('네, 작성해 왔습니다!','1');
+        addChoice('아직 안 했는데요...','2');
+      });
+    }else{
+      typeText('안내원: 좋습니다! 서류가 다 준비되셨군요.\n그럼 제가 대기표를 뽑아 드릴게요!',autoNext);
+    }
+  }
+  else if(step===6){
+    changeBackground('Information_desk.png');
+    if(choices[5]==='2'){
+      typeText('안내원: 괜찮아요! 저쪽에 작성 공간이 있으니 작성하고 오세요.\n(잠시 후 작성 완료)\n안내원: 좋습니다! 그럼 대기표를 뽑아 드릴게요!',autoNext);
+    }else{
+      typeText('안내원: 좋습니다! 그럼 대기표를 뽑아 드릴게요!',autoNext);
+    }
+  }
+
+  // ===== 파트2: 대기 =====
+  else if(step===7){
+    changeBackground('Immigration_waiting.png');
+    typeText('안내원: 여기 대기표입니다. 🎫\n번호가 호출되면 창구로 가세요!',()=>{
+      addChoice('감사합니다! (대기표를 받는다)','1');
+      addChoice('(대기표를 받으며 고개를 끄덕인다)','2');
+    });
+  }
+  else if(step===8){
+    changeBackground('Immigration_waiting.png');
+    typeText('(자리에 앉아 기다리는 중...)\n(주변에 다른 외국인들도 대기하고 있다)',()=>{
+      addChoice('(조용히 기다린다)','1');
+      addChoice('(서류를 다시 한번 확인한다)','2');
+    });
+  }
+  else if(step===9){
+    changeBackground('Immigration_waiting.png');
+    if(choices[8]==='2'){
+      typeText('(서류를 다시 확인한다... 통합신청서, 여권, 사진, 체류지 서류... 다 있다!)',autoNext);
+    }else{
+      typeText('(조용히 기다리는 중... 전광판의 번호가 바뀌고 있다)',autoNext);
+    }
+  }
+  else if(step===10){
+    changeBackground('Immigration_waiting.png');
+    typeText('📢 "다음 번호, 창구 3번으로 오세요!"\n\n주인공: 아, 내 번호다!',()=>{
+      addChoice('(서류를 챙겨 창구로 간다)','1');
+      addChoice('(서둘러 일어난다)','2');
+    });
+  }
+
+  // ===== 파트3: 서류 제출 창구 =====
+  else if(step===11){
+    changeBackground('Immigration_RegDesk.png');
+    typeText('담당 직원: 안녕하세요. 외국인 등록 신청이시죠?\n서류를 제출해 주세요.',()=>{
+      addChoice('(서류를 건넨다)','1');
+      addChoice('네, 여기 있습니다!','2');
+    });
+  }
+  else if(step===12){
+    changeBackground('Immigration_RegDesk.png');
+    typeText('담당 직원: (서류를 확인한다)\n📋 통합신청서... ✅\n📕 여권 원본 및 사본... ✅',autoNext);
+  }
+  else if(step===13){
+    changeBackground('Immigration_RegDesk.png');
+    typeText('담당 직원: 📷 컬러 사진 (3.5x4.5cm, 흰 배경)... ✅\n🏠 체류지 입증 서류... ✅',autoNext);
+  }
+  else if(step===14){
+    changeBackground('Immigration_RegDesk.png');
+    typeText('담당 직원: 📄 체류 자격별 추가 서류... ✅\n모든 서류가 확인되었습니다!',autoNext);
+  }
+  else if(step===15){
+    changeBackground('Immigration_RegDesk.png');
+    typeText('담당 직원: 수수료 30,000원을 납부해 주세요.\n현금만 가능합니다.',()=>{
+      addChoice('(30,000원을 건넨다)','1');
+      addChoice('카드로 안 되나요?','2');
+    });
+  }
+  else if(step===16){
+    changeBackground('Immigration_RegDesk.png');
+    if(choices[15]==='1'){
+      typeText('담당 직원: 수수료 납부 완료! ✅',autoNext);
+    }else{
+      typeText('담당 직원: 죄송합니다, 현금만 가능해요.\n저쪽에 ATM이 있으니 현금을 인출해 오세요!',()=>{
+        addChoice('(ATM에서 현금을 인출해 온다)','1');
+        addChoice('(주머니를 뒤진다) 아, 현금이 있었네요!','2');
+      });
+    }
+  }
+  else if(step===17){
+    changeBackground('Immigration_RegDesk.png');
+    if(choices[15]!=='1'){
+      typeText('담당 직원: 수수료 납부 완료! ✅',autoNext);
+    }else{
+      typeText('담당 직원: 외국인 등록증은 약 3~4주 후에 발급됩니다.\n수령 방법을 선택해 주세요.',()=>{
+        addChoice('직접 방문해서 수령하겠습니다.','1');
+        addChoice('우편으로 받겠습니다. (비용 별도)','2');
+      });
+    }
+  }
+  else if(step===18){
+    changeBackground('Immigration_RegDesk.png');
+    if(choices[17]===undefined){
+      typeText('담당 직원: 외국인 등록증은 약 3~4주 후에 발급됩니다.\n수령 방법을 선택해 주세요.',()=>{
+        addChoice('직접 방문해서 수령하겠습니다.','1');
+        addChoice('우편으로 받겠습니다. (비용 별도)','2');
+      });
+    }else if(choices[17]==='1' || choices[18]==='1'){
+      typeText('담당 직원: 네, 3~4주 후에 직접 방문해 주세요!\n접수증을 꼭 보관하세요.',autoNext);
+    }else{
+      typeText('담당 직원: 네, 우편으로 보내드리겠습니다.\n등기우편 비용이 별도로 발생합니다.',autoNext);
+    }
+  }
+  else if(step===19){
+    changeBackground('Immigration_RegDesk.png');
+    typeText('담당 직원: 외국인 등록 신청이 완료되었습니다! 수고하셨어요!\n주인공: 감사합니다! 정말 도움이 많이 됐어요!',showMissionComplete);
+  }
+}
+
+next();
+</script>
+</body>
+</html>

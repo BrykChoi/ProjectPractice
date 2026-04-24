@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>한국 생활 RPG - 미션 선택</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(-45deg,#667eea,#764ba2,#f093fb,#4facfe);background-size:400% 400%;animation:gs 15s ease infinite;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+@keyframes gs{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+h1{color:#fff;font-size:48px;font-weight:900;text-shadow:4px 4px 8px rgba(0,0,0,.5);margin-bottom:10px;animation:titleIn .8s cubic-bezier(.34,1.56,.64,1);}
+@keyframes titleIn{0%{opacity:0;transform:scale(.5) translateY(-30px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+
+.subtitle{color:rgba(255,255,255,.8);font-size:20px;margin-bottom:50px;font-weight:500;animation:fadeIn 1s ease .3s both;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.missions{display:grid;grid-template-columns:1fr 1fr;gap:30px;max-width:900px;width:90%;padding:0 20px;}
+
+.mission-card{
+  background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.05));
+  backdrop-filter:blur(10px);
+  border:3px solid rgba(255,255,255,.3);
+  border-radius:25px;
+  padding:40px 30px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  position:relative;
+  overflow:hidden;
+  animation:cardIn .6s cubic-bezier(.34,1.56,.64,1) both;
+}
+.mission-card:nth-child(1){animation-delay:.1s}
+.mission-card:nth-child(2){animation-delay:.2s}
+.mission-card:nth-child(3){animation-delay:.3s}
+.mission-card:nth-child(4){animation-delay:.4s}
+
+@keyframes cardIn{0%{opacity:0;transform:translateY(40px) scale(.8)}100%{opacity:1;transform:translateY(0) scale(1)}}
+
+.mission-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.1),transparent);
+  opacity:0;transition:opacity .3s ease;
+}
+.mission-card:hover::before{opacity:1}
+
+.mission-card:hover{
+  transform:translateY(-10px) scale(1.05);
+  border-color:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 30px rgba(255,255,255,.2);
+}
+
+.mission-card:active{transform:translateY(-5px) scale(1.02)}
+
+.mission-icon{font-size:64px;margin-bottom:20px;display:block;}
+.mission-title{color:#fff;font-size:24px;font-weight:700;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.3);}
+.mission-desc{color:rgba(255,255,255,.8);font-size:15px;line-height:1.6;}
+
+.mission-status{
+  position:absolute;top:15px;right:15px;
+  padding:5px 12px;border-radius:20px;
+  font-size:12px;font-weight:700;
+  background:rgba(255,255,255,.2);color:rgba(255,255,255,.7);
+}
+.mission-status.cleared{
+  background:linear-gradient(135deg,#00f2fe,#4facfe);
+  color:#fff;
+  box-shadow:0 3px 10px rgba(79,172,254,.5);
+}
+
+.footer{color:rgba(255,255,255,.5);font-size:14px;margin-top:50px;animation:fadeIn 1s ease .6s both;}
+
+/* 챗봇 버튼 */
+#chatbot-btn{
+  position:fixed;bottom:30px;right:30px;width:65px;height:65px;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:30px;cursor:pointer;z-index:1000;
+  box-shadow:0 8px 30px rgba(102,126,234,.6);
+  border:3px solid #fff;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+}
+#chatbot-btn:hover{transform:scale(1.15);box-shadow:0 12px 40px rgba(102,126,234,.8);}
+
+/* 챗봇 패널 */
+#chatbot-panel{
+  display:none;flex-direction:column;
+  position:fixed;bottom:0;right:0;
+  width:30%;min-width:350px;height:100vh;
+  background:linear-gradient(180deg,#1a1a2e 0%,#16213e 100%);
+  border-left:3px solid rgba(102,126,234,.5);
+  z-index:1001;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+
+#chatbot-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:20px 25px;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;font-size:18px;font-weight:700;
+}
+#chatbot-header button{
+  background:none;border:none;color:#fff;font-size:20px;
+  cursor:pointer;padding:5px 10px;border-radius:8px;
+  transition:background .2s;
+}
+#chatbot-header button:hover{background:rgba(255,255,255,.2);}
+
+#chatbot-messages{
+  flex:1;overflow-y:auto;padding:20px;
+  display:flex;flex-direction:column;gap:15px;
+}
+#chatbot-messages::-webkit-scrollbar{width:6px;}
+#chatbot-messages::-webkit-scrollbar-track{background:transparent;}
+#chatbot-messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px;}
+
+.chat-msg{display:flex;}
+.chat-user{justify-content:flex-end;}
+.chat-bot{justify-content:flex-start;}
+
+.chat-bubble{
+  max-width:80%;padding:14px 18px;border-radius:18px;
+  font-size:15px;line-height:1.7;word-break:break-word;
+}
+.chat-bubble-user{
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;border-bottom-right-radius:4px;
+}
+.chat-bubble-bot{
+  background:rgba(255,255,255,.1);
+  color:#e0e0e0;border-bottom-left-radius:4px;
+  border:1px solid rgba(255,255,255,.1);
+}
+.chat-bubble.typing{
+  color:rgba(255,255,255,.5);font-style:italic;
+  animation:pulse 1s infinite;
+}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+#chatbot-input-area{
+  display:flex;gap:10px;padding:20px;
+  background:rgba(0,0,0,.3);
+  border-top:1px solid rgba(255,255,255,.1);
+}
+#chatbot-input{
+  flex:1;padding:14px 18px;
+  background:rgba(255,255,255,.1);
+  border:2px solid rgba(255,255,255,.2);
+  border-radius:15px;color:#fff;font-size:15px;
+  font-family:'Noto Sans KR',sans-serif;
+  outline:none;transition:border-color .3s;
+}
+#chatbot-input::placeholder{color:rgba(255,255,255,.4);}
+#chatbot-input:focus{border-color:#667eea;}
+#chatbot-send{
+  padding:14px 20px;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;border:none;border-radius:15px;
+  font-size:18px;cursor:pointer;
+  transition:all .3s;
+}
+#chatbot-send:hover{transform:scale(1.1);box-shadow:0 5px 15px rgba(102,126,234,.5);}
+</style>
+</head>
+<body>
+<h1>🇰🇷 한국 생활 RPG</h1>
+<p class="subtitle">클리어하고 싶은 미션을 선택하세요!</p>
+<div class="missions">
+  <div class="mission-card" onclick="goMission('airport_exchange.html','exchange')">
+    <span class="mission-status" id="status-exchange">미완료</span>
+    <span class="mission-icon">💱</span>
+    <div class="mission-title">공항 환전</div>
+    <div class="mission-desc">공항에 도착한 외국인이<br>환전소에서 달러를 원으로 환전</div>
+  </div>
+  <div class="mission-card" onclick="goMission('airport_lost_and_found.html','lostfound')">
+    <span class="mission-status" id="status-lostfound">미완료</span>
+    <span class="mission-icon">📱</span>
+    <div class="mission-title">공항 분실물 센터</div>
+    <div class="mission-desc">공항에서 잃어버린 휴대폰을<br>분실물 센터에서 찾기</div>
+  </div>
+  <div class="mission-card" onclick="goMission('immigration_registration.html','immigration')">
+    <span class="mission-status" id="status-immigration">미완료</span>
+    <span class="mission-icon">🏛️</span>
+    <div class="mission-title">출입국관리사무소</div>
+    <div class="mission-desc">출입국관리사무소를 방문하여<br>외국인 등록 신청하기</div>
+  </div>
+  <div class="mission-card" onclick="goMission('ConvStore.html','convstore')">
+    <span class="mission-status" id="status-convstore">미완료</span>
+    <span class="mission-icon">🏪</span>
+    <div class="mission-title">편의점</div>
+    <div class="mission-desc">편의점에서 교통 카드를<br>구매하고 충전하기</div>
+  </div>
+</div>
+<p class="footer">미션을 클리어하면 자동으로 이 화면으로 돌아옵니다</p>
+
+<!-- 챗봇 버튼 -->
+<div id="chatbot-btn" onclick="toggleChatbot()">💬</div>
+
+<!-- 챗봇 패널 -->
+<div id="chatbot-panel">
+  <div id="chatbot-header">
+    <span>🤖 한국 생활 도우미</span>
+    <div>
+      <button id="chatbot-clear" onclick="clearHistory()" title="대화 기록 삭제">🗑️</button>
+      <button id="chatbot-close" onclick="toggleChatbot()">✕</button>
+    </div>
+  </div>
+  <div id="chatbot-messages"></div>
+  <div id="chatbot-input-area">
+    <input type="text" id="chatbot-input" placeholder="질문을 입력하세요..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <button id="chatbot-send" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+<script>
+function loadStatus(){
+  const missions=['exchange','lostfound','immigration','convstore'];
+  missions.forEach(m=>{
+    const el=document.getElementById('status-'+m);
+    if(localStorage.getItem('cleared_'+m)==='true'){
+      el.textContent='✅ 클리어';
+      el.classList.add('cleared');
+    }
+  });
+}
+
+function goMission(url,key){
+  localStorage.setItem('current_mission',key);
+  window.location.href=url;
+}
+
+// ===== 챗봇 =====
+const CHAT_STORAGE_KEY='chatbot_history';
+const CHAT_EXPIRY_DAYS=7;
+let chatOpen=false;
+
+function toggleChatbot(){
+  chatOpen=!chatOpen;
+  document.getElementById('chatbot-panel').style.display=chatOpen?'flex':'none';
+  document.getElementById('chatbot-btn').style.display=chatOpen?'none':'flex';
+  if(chatOpen) loadChatHistory();
+}
+
+function saveChatHistory(messages){
+  const data={messages:messages,timestamp:Date.now()};
+  localStorage.setItem(CHAT_STORAGE_KEY,JSON.stringify(data));
+}
+
+function loadChatHistory(){
+  const raw=localStorage.getItem(CHAT_STORAGE_KEY);
+  if(!raw) return;
+  try{
+    const data=JSON.parse(raw);
+    const daysDiff=(Date.now()-data.timestamp)/(1000*60*60*24);
+    if(daysDiff>CHAT_EXPIRY_DAYS){
+      localStorage.removeItem(CHAT_STORAGE_KEY);
+      return;
+    }
+    const container=document.getElementById('chatbot-messages');
+    container.innerHTML='';
+    data.messages.forEach(m=>appendMessage(m.role,m.content,false));
+  }catch(e){localStorage.removeItem(CHAT_STORAGE_KEY);}
+}
+
+function getStoredMessages(){
+  const raw=localStorage.getItem(CHAT_STORAGE_KEY);
+  if(!raw) return [];
+  try{
+    const data=JSON.parse(raw);
+    const daysDiff=(Date.now()-data.timestamp)/(1000*60*60*24);
+    if(daysDiff>CHAT_EXPIRY_DAYS){localStorage.removeItem(CHAT_STORAGE_KEY);return [];}
+    return data.messages||[];
+  }catch(e){return [];}
+}
+
+function appendMessage(role,content,save=true){
+  const container=document.getElementById('chatbot-messages');
+  const div=document.createElement('div');
+  div.className='chat-msg chat-'+role;
+  div.innerHTML=`<div class="chat-bubble chat-bubble-${role}">${content}</div>`;
+  container.appendChild(div);
+  container.scrollTop=container.scrollHeight;
+  if(save){
+    const msgs=getStoredMessages();
+    msgs.push({role,content});
+    saveChatHistory(msgs);
+  }
+}
+
+function clearHistory(){
+  localStorage.removeItem(CHAT_STORAGE_KEY);
+  document.getElementById('chatbot-messages').innerHTML='';
+  appendMessage('bot','대화 기록이 삭제되었습니다. 무엇이든 물어보세요!');
+}
+
+async function sendMessage(){
+  const input=document.getElementById('chatbot-input');
+  const msg=input.value.trim();
+  if(!msg) return;
+  input.value='';
+  appendMessage('user',msg);
+
+  const typing=document.createElement('div');
+  typing.className='chat-msg chat-bot';
+  typing.id='typing-indicator';
+  typing.innerHTML='<div class="chat-bubble chat-bubble-bot typing">답변 생성 중...</div>';
+  document.getElementById('chatbot-messages').appendChild(typing);
+  document.getElementById('chatbot-messages').scrollTop=document.getElementById('chatbot-messages').scrollHeight;
+
+  try{
+    const res=await fetch('http://localhost:5000/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg})
+    });
+    const data=await res.json();
+    typing.remove();
+    if(data.response){
+      appendMessage('bot',data.response);
+    }else{
+      appendMessage('bot','죄송합니다, 오류가 발생했습니다: '+(data.error||'알 수 없는 오류'));
+    }
+  }catch(e){
+    typing.remove();
+    appendMessage('bot','서버에 연결할 수 없습니다. chatbot_server.py가 실행 중인지 확인해 주세요.');
+  }
+}
+
+loadStatus();
+// 첫 방문 시 환영 메시지
+if(!localStorage.getItem(CHAT_STORAGE_KEY)){
+  // 저장하지 않음 - 열었을 때 표시
+}
+</script>
+</body>
+</html>
